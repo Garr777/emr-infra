@@ -1,0 +1,13 @@
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  tags:
+    - emr
+  image: docker:cli
+  script:
+    - docker rm -f emr-backend emr-frontend 2>/dev/null || true
+    - docker compose -p emr up -d --no-build
+  only:
+    - master
