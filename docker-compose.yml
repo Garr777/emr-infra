@@ -54,7 +54,7 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - /opt/emr/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - promdata:/prometheus
     ports:
       - "9090:9090"
@@ -70,7 +70,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - /opt/emr/grafana/provisioning:/etc/grafana/provisioning:ro
       - grafanadata:/var/lib/grafana
     ports:
       - "3000:3000"
