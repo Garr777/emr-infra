@@ -9,3 +9,19 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: true
+
+  - name: PostgreSQL
+    uid: postgres
+    type: postgres
+    access: proxy
+    # service name on the compose network
+    url: postgres:5432
+    user: emr
+    jsonData:
+      database: emr
+      sslmode: disable
+      postgresVersion: 1600
+    secureJsonData:
+      # interpolated from the grafana container env (see docker-compose.yml)
+      password: $POSTGRES_PASSWORD
+    editable: true

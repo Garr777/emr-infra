@@ -256,6 +256,60 @@
           "refId": "A"
         }
       ]
+    },
+    {
+      "id": 10,
+      "title": "Doctors",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS value FROM users WHERE role = 'DOCTOR';",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Patients",
+      "type": "stat",
+      "datasource": {
+        "type": "postgres",
+        "uid": "postgres"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "postgres"
+          },
+          "rawQuery": true,
+          "rawSql": "SELECT count(*) AS value FROM users WHERE role = 'PATIENT';",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
     }
   ]
 }
