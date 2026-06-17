@@ -133,7 +133,7 @@
     {
       "id": 5,
       "title": "Errors by code (401/403/404/500)",
-      "type": "timeseries",
+      "type": "stat",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -146,7 +146,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (status) (rate(http_requests_total{status=~\"401|403|404|500\"}[5m]))",
+          "expr": "sum by (status) (http_requests_total{status=~\"401|403|404|500\"})",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
@@ -154,8 +154,8 @@
     },
     {
       "id": 6,
-      "title": "403 — попытки доступа к чужим записям (req/s)",
-      "type": "timeseries",
+      "title": "403 — попытки доступа к чужим записям",
+      "type": "stat",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -168,30 +168,7 @@
       },
       "targets": [
         {
-          "expr": "sum by (handler) (rate(http_requests_total{status=\"403\"}[5m]))",
-          "legendFormat": "{{handler}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "title": "Активные врачи (за 24ч)",
-      "type": "stat",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 0,
-        "y": 24
-      },
-      "targets": [
-        {
-          "expr": "count(count by (user) (increase(http_requests_total{user!=\"\"}[24h]) > 0))",
-          "legendFormat": "active doctors",
+          "expr": "sum(http_requests_total{status=\"403\"})",
           "refId": "A"
         }
       ]
