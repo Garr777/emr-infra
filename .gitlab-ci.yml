@@ -6,6 +6,11 @@ deploy:
   script:
     - docker rm -f emr-backend emr-frontend 2>/dev/null || true
     - docker compose -p emr up -d --no-build
+    # залить конфиги мониторинга в контейнеры (раннер изолирован, bind-mount с хоста невозможен)
+    - docker cp prometheus.yml emr-prometheus:/etc/prometheus/prometheus.yml
+    - docker cp grafana/provisioning/. emr-grafana:/etc/grafana/provisioning
+    # перезапустить, чтобы prometheus перечитал конфиг, а grafana — datasources/дашборды
+    - docker restart emr-prometheus emr-grafana
     # подождать, пока бек поднимется
     - sleep 10
     # миграции (с повтором на случай, если бек ещё не готов)

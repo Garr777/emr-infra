@@ -56,7 +56,7 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # prometheus.yml is pushed in via `docker cp` in CI (isolated runner can't bind-mount host files)
       - promdata:/prometheus
     ports:
       - "9090:9090"
@@ -75,7 +75,7 @@ services:
       # used by the PostgreSQL datasource provisioning (datasource.yml)
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      # provisioning is pushed in via `docker cp` in CI (isolated runner can't bind-mount host files)
       - grafanadata:/var/lib/grafana
     ports:
       - "3000:3000"
