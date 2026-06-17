@@ -15,6 +15,15 @@ deploy:
     - sleep 10
     # миграции (с повтором на случай, если бек ещё не готов)
     - docker exec emr-backend alembic upgrade head
-    - docker exec emr-backend python seed.py
+    # seed.py делает TRUNCATE всех таблиц — гоняем только при первом деплое (пустая users),
+    # иначе он затрёт реальных пациентов/записи, созданные через приложение
+    - |
+      USERS=$(docker exec emr-postgres psql -U emr -d emr -tAc "SELECT count(*) FROM users")
+      if [ "$USERS" = "0" ]; then
+        echo "users пуст — выполняю seed.py"
+        docker exec emr-backend python seed.py
+      else
+        echo "users содержит $USERS записей — пропускаю seed.py"
+      fi
   only:
     - master
