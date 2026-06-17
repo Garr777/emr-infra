@@ -6,7 +6,7 @@ scrape_configs:
   - job_name: emr-backend
     metrics_path: /metrics
     static_configs:
-      # The FastAPI app runs on the host (uvicorn :8080), not in a container.
-      - targets: ["host.docker.internal:8080"]
+      # backend runs as a container on the compose network; reach it by service name.
+      - targets: ["backend:8080"]
         labels:
           service: emr-backend
