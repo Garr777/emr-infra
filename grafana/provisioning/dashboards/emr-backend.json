@@ -4,6 +4,7 @@
   },
   "editable": true,
   "schemaVersion": 39,
+  "uid": "emr-backend",
   "title": "EMR Backend",
   "tags": [
     "emr",
