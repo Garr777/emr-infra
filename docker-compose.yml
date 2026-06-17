@@ -77,6 +77,9 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      # открыть дашборды без логина (аноним-просмотр)
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
       # used by the PostgreSQL datasource provisioning (datasource.yml)
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
