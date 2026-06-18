@@ -97,7 +97,7 @@
       },
       "targets": [
         {
-          "expr": "sum(http_requests_total{status=\"403\"})",
+          "expr": "sum(http_requests_total{status=\"403\"}) or vector(0)",
           "refId": "A"
         }
       ]
@@ -222,7 +222,7 @@
       },
       "targets": [
         {
-          "expr": "100 * sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
+          "expr": "(100 * sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))) or vector(0)",
           "legendFormat": "5xx error rate",
           "refId": "A"
         }

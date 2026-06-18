@@ -44,28 +44,40 @@ HTTP-трафика, времени отклика, ошибок, доступн
 
 Описан в `provisioning/dashboards/emr-backend.json` (`uid: emr-backend`).
 
+Панели размещены без пустых ячеек сетки; идентификаторы панелей сквозные (1–13).
+Порядок соответствует расположению на дашборде сверху вниз.
+
 ### Показатели на основе метрик Prometheus
 
 | Панель | Тип | Запрос | Назначение |
 |---|---|---|---|
+| Service up | индикатор | `up{job="emr-backend"}` | Доступность серверной части: UP (1) / DOWN (0). Размещена первой как наиболее важный сигнал |
+| Текущий RPS | индикатор | `sum(rate(http_requests_total[5m]))` | Суммарная нагрузка, запр./с |
+| 403 — попытки доступа к чужим записям | индикатор | `sum(http_requests_total{status="403"})` | Количество отказов в доступе (индикатор обращений к чужим данным) |
 | Request rate by handler | график | `sum by (handler) (rate(http_requests_total[5m]))` | Интенсивность запросов (запр./с) по эндпоинтам |
 | Responses by status | график | `sum by (status) (rate(http_requests_total[5m]))` | Интенсивность ответов в разрезе кодов состояния |
-| Latency by handler | график | `histogram_quantile(0.50/0.95/0.99, …rate(http_request_duration_seconds_bucket[5m]))` | Время отклика по перцентилям p50 / p95 / p99 |
-| Error rate 5xx | график | `100 * sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))` | Доля серверных ошибок (5xx), % |
+| Latency p95 / p99 — сервис (SLA ≤ 3s) | график | `histogram_quantile(0.95/0.99, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))` | Время отклика по сервису в целом (p95, p99). Пороговая линия SLA на 3 с (красная зона) |
+| Error rate 5xx (SLA ≤ 1%) | график | `100 * sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))` | Доля серверных ошибок (5xx), %. Пороговая линия SLA на 1 % |
 | Errors by code | индикаторы | `sum by (status) (http_requests_total{status=~"401\|403\|404\|500"})` | Количество ответов по кодам ошибок 401/403/404/500 |
-| 403 — попытки доступа к чужим записям | индикатор | `sum(http_requests_total{status="403"})` | Количество отказов в доступе (индикатор обращений к чужим данным) |
-| Текущий RPS | индикатор | `sum(rate(http_requests_total[5m]))` | Суммарная нагрузка, запр./с |
-| Service up | индикатор | `up{job="emr-backend"}` | Доступность серверной части: UP (1) / DOWN (0) |
+| Latency p95 by handler (detail) | график | `histogram_quantile(0.95, sum by (handler, le) (rate(http_request_duration_seconds_bucket[5m])))` | Детализация времени отклика (p95) по эндпоинтам — вынесена из обзорной панели |
 
 Коды состояния: **401** — запрос без аутентификации; **403** — недостаточно прав на
 ресурс; **404** — ресурс не найден; **500** — внутренняя ошибка сервера.
 
+Пороговые линии SLA (3 с для латентности, 1 % для доли 5xx) заданы согласно
+требованиям ТЗ и позволяют видеть выход показателя за допустимые границы.
+
 ### Показатели на основе данных PostgreSQL
+
+«Активность» рассчитывается по таблице `medical_records` (записи истории болезни) за
+последние 7 суток: `created_at >= now() - interval '7 days'`.
 
 | Панель | Тип | Запрос | Назначение |
 |---|---|---|---|
 | Doctors | индикатор | `SELECT count(*) FROM users WHERE role = 'DOCTOR'` | Количество учётных записей с ролью «Врач» |
 | Patients | индикатор | `SELECT count(*) FROM users WHERE role = 'PATIENT'` | Количество учётных записей с ролью «Пациент» |
+| Активные врачи (неделя) | индикатор | `SELECT count(DISTINCT author_id) FROM medical_records WHERE created_at >= now() - interval '7 days'` | Врачи, создавшие хотя бы одну запись истории болезни за неделю |
+| Активные пациенты (неделя) | индикатор | `SELECT count(DISTINCT patient_id) FROM medical_records WHERE created_at >= now() - interval '7 days'` | Пациенты, по которым за неделю заведена хотя бы одна запись истории болезни |
 
 ## Параметры сбора и хранения
 
