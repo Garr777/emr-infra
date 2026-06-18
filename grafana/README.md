@@ -74,8 +74,8 @@ HTTP-трафика, времени отклика, ошибок, доступн
 
 | Панель | Тип | Запрос | Назначение |
 |---|---|---|---|
-| Doctors | индикатор | `SELECT count(*) FROM users WHERE role = 'DOCTOR'` | Количество учётных записей с ролью «Врач» |
-| Patients | индикатор | `SELECT count(*) FROM users WHERE role = 'PATIENT'` | Количество учётных записей с ролью «Пациент» |
+| Врачи | индикатор | `SELECT count(*) FROM users WHERE role = 'DOCTOR'` | Количество учётных записей с ролью «Врач» |
+| Пациенты | индикатор | `SELECT count(*) FROM users WHERE role = 'PATIENT'` | Количество учётных записей с ролью «Пациент» |
 | Активные врачи (неделя) | индикатор | `SELECT count(DISTINCT author_id) FROM medical_records WHERE created_at >= now() - interval '7 days'` | Врачи, создавшие хотя бы одну запись истории болезни за неделю |
 | Активные пациенты (неделя) | индикатор | `SELECT count(DISTINCT patient_id) FROM medical_records WHERE created_at >= now() - interval '7 days'` | Пациенты, по которым за неделю заведена хотя бы одна запись истории болезни |
 
