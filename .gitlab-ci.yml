@@ -9,11 +9,8 @@ validate:
   image: docker:cli
   script:
     - docker compose -p emr config -q
-    - docker run --rm
-      -v "$PWD/prometheus.yml:/etc/prometheus/prometheus.yml"
-      -v "$PWD/alerts.yml:/etc/prometheus/alerts.yml"
-      --entrypoint promtool prom/prometheus:v3.5.4
-      check config /etc/prometheus/prometheus.yml
+    - docker build -f prometheus.Dockerfile -t emr-prometheus:ci .
+    - docker run --rm --entrypoint promtool emr-prometheus:ci check config /etc/prometheus/prometheus.yml
   only:
     - master
 
