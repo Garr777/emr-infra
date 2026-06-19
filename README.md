@@ -7,14 +7,14 @@
 
 | Сервис | Образ | Порт | Назначение |
 |---|---|---|---|
-| postgres | `postgres:16-alpine` | `127.0.0.1:5432` | База данных |
+| postgres | `postgres:16-alpine` | `5432` | База данных |
 | backend | `emr-backend:latest` | `8080` | API (alembic, JWT), экспорт метрик `/metrics` |
 | frontend | `emr-frontend:latest` | `5173` | Веб-интерфейс (nginx) |
-| prometheus | `prom/prometheus:v3.5.4` | `127.0.0.1:9090` | Сбор метрик и alert-правила |
+| prometheus | `prom/prometheus:v3.5.4` | `9090` | Сбор метрик и alert-правила |
 | grafana | `grafana/grafana:12.4.4` | `3000` | Визуализация (анонимный просмотр) |
 
-Порты БД и Prometheus открыты только на `127.0.0.1`. Образы prometheus/grafana собираются
-с «запечёнными» конфигами (см. `*.Dockerfile`), поэтому переживают пересоздание контейнеров.
+Образы prometheus/grafana собираются с «запечёнными» конфигами (см. `*.Dockerfile`),
+поэтому переживают пересоздание контейнеров.
 
 ## Запуск
 
