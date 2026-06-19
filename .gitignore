@@ -1,0 +1,11 @@
+# секреты окружения — в репозиторий не попадают, см. .env.example
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+
+# прочее
+*.log
