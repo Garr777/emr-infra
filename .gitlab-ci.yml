@@ -1,3 +1,22 @@
+stages:
+  - validate
+  - deploy
+
+validate:
+  stage: validate
+  tags:
+    - emr
+  image: docker:cli
+  script:
+    - docker compose -p emr config -q
+    - docker run --rm
+      -v "$PWD/prometheus.yml:/etc/prometheus/prometheus.yml"
+      -v "$PWD/alerts.yml:/etc/prometheus/alerts.yml"
+      --entrypoint promtool prom/prometheus:v3.5.4
+      check config /etc/prometheus/prometheus.yml
+  only:
+    - master
+
 deploy:
   stage: deploy
   tags:
@@ -8,10 +27,20 @@ deploy:
     # собрать образы prometheus/grafana с зашитыми конфигами — переживают пересоздание контейнеров
     - docker compose -p emr build prometheus grafana
     - docker compose -p emr up -d --no-build
-    # подождать, пока бек поднимется
-    - sleep 10
-    # миграции (с повтором на случай, если бек ещё не готов)
-    - docker exec emr-backend alembic upgrade head
+    # дождаться готовности бэкенда вместо фиксированного sleep
+    - |
+      for i in $(seq 1 30); do
+        if docker exec emr-backend python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/metrics', timeout=2)" 2>/dev/null; then
+          echo "backend готов"; break
+        fi
+        echo "ожидаю backend ($i/30)"; sleep 2
+      done
+    # миграции с повтором на случай, если бек ещё не готов
+    - |
+      for i in $(seq 1 5); do
+        if docker exec emr-backend alembic upgrade head; then break; fi
+        echo "alembic не удался, повтор $i/5"; sleep 3
+      done
     # seed.py делает TRUNCATE всех таблиц — гоняем только при первом деплое (пустая users),
     # иначе он затрёт реальных пациентов/записи, созданные через приложение
     - |

@@ -1,10 +1,19 @@
+# Стек EMR: БД, бэкенд, фронтенд и мониторинг (Prometheus + Grafana).
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:16-alpine
     container_name: emr-postgres
     restart: unless-stopped
-    ports: 
-      - 5432:5432
+    logging: *default-logging
+    ports:
+      - "127.0.0.1:5432:5432"
     environment:
       POSTGRES_DB: emr
       POSTGRES_USER: emr
@@ -17,11 +26,16 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   backend:
     image: emr-backend:latest
     container_name: emr-backend
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       postgres:
         condition: service_healthy
@@ -37,17 +51,38 @@ services:
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080/metrics', timeout=2)\""]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   frontend:
     image: emr-frontend:latest
     container_name: emr-frontend
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       - backend
     environment:
       BACKEND_URL: http://backend:8080
     ports:
       - "5173:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:80/ || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
   prometheus:
     build:
@@ -56,12 +91,26 @@ services:
     image: emr-prometheus:latest
     container_name: emr-prometheus
     restart: unless-stopped
+    logging: *default-logging
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
     volumes:
       - promdata:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:9090/-/healthy || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
   grafana:
     build:
@@ -70,6 +119,7 @@ services:
     image: emr-grafana:latest
     container_name: emr-grafana
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       - prometheus
       - postgres
@@ -77,15 +127,23 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: ${GF_ADMIN_PASSWORD}
       GF_USERS_ALLOW_SIGN_UP: "false"
-      # открыть дашборды без логина (аноним-просмотр)
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
-      # used by the PostgreSQL datasource provisioning (datasource.yml)
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - grafanadata:/var/lib/grafana
     ports:
       - "3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
 
 volumes:
   pgdata:

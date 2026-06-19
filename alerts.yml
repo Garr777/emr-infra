@@ -1,0 +1,31 @@
+# Alert-правила под SLA сервиса EMR (см. grafana/README.md).
+
+groups:
+  - name: emr-backend-sla
+    rules:
+      - alert: BackendDown
+        expr: up{job="emr-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend недоступен"
+          description: "Цель {{ $labels.instance }} не отвечает более 1 минуты."
+
+      - alert: HighErrorRate5xx
+        expr: 100 * sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Доля 5xx выше SLA (1%)"
+          description: "За 5 минут доля серверных ошибок {{ $value | printf \"%.2f\" }}% превышает порог 1%."
+
+      - alert: HighLatencyP95
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 времени отклика выше SLA (3s)"
+          description: "p95 латентности сервиса превышает 3 секунды более 5 минут."

@@ -1,4 +1,2 @@
-FROM grafana/grafana:latest
-# bake provisioning (datasources + dashboards) into the image so it survives
-# container recreation, re-pulls and host reboots
+FROM grafana/grafana:12.4.4
 COPY grafana/provisioning /etc/grafana/provisioning
